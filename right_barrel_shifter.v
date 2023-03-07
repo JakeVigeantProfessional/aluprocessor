@@ -1,5 +1,5 @@
-module right_barrel_shifter (data, amt, out);
-    input [31:0] data;
+module right_barrel_shifter (x, amt, out);
+    input [31:0] x;
     input [4:0] amt;
     output [31:0] out;
 
