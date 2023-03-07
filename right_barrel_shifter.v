@@ -3,25 +3,24 @@ module right_barrel_shifter (data, amt, out);
     input [4:0] amt;
     output [31:0] out;
 
-    wire [31:0] w1,w2,w3,w4, s1, s2,s3,s4,s5;
+    wire [31:0] w1, w2, w3, w4, w5;
+    wire [31:0] shift1, shift2, shift3, shift4;
 
-    //for each mux, input previous level's result, let amt act as select bits to choose
-    //if this shift occurs
-    //module mux_2(out, select, in0, in1);
-    one_bit_right_shift shift1(data, s1);
-    mux_2 level1(w1,amt[0],data, s1);
+    sixteen_bit_right_shift s16(x, w1);
+    assign shift1 = amt[4] ? w1 : x;
 
-    two_bit_right_shift shift2(w1, s2);
-    mux_2 level2(w2,amt[1],w1, s2);
+    eight_bit_right_shift s8(shift1, w2);
+    assign shift2 = amt[3] ? w2 : shift1;
 
-    four_bit_right_shift shift3(w2, s3);
-    mux_2 level3(w3,amt[2],w2, s3);
+    four_bit_right_shift s4(shift2, w3);
+    assign shift3 = amt[2] ? w3 : shift2;
 
-    eight_bit_right_shift shift4(w3, s4);
-    mux_2 level4(w4,amt[3],w3, s4);
+    two_bit_right_shift s2(shift3, w4);
+    assign shift4 = amt[1] ? w4 : shift3;
 
-    sixteen_bit_right_shift shift5(w4, s5);
-    mux_2 level5(out,amt[4],w4, s5);
+    one_bit_right_shift s1(shift4, w5);
+    assign out = amt[0] ? w5 : shift4;
+
 
 
 endmodule
