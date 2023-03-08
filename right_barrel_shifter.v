@@ -1,13 +1,13 @@
-module right_barrel_shifter (x, amt, out);
-    input [31:0] x;
+module right_barrel_shifter (data, amt, out);
+    input [31:0] data;
     input [4:0] amt;
     output [31:0] out;
 
     wire [31:0] w1, w2, w3, w4, w5;
     wire [31:0] shift1, shift2, shift3, shift4;
 
-    sixteen_bit_right_shift s16(x, w1);
-    assign shift1 = amt[4] ? w1 : x;
+    sixteen_bit_right_shift s16(data, w1);
+    assign shift1 = amt[4] ? w1 : data;
 
     eight_bit_right_shift s8(shift1, w2);
     assign shift2 = amt[3] ? w2 : shift1;

@@ -6,61 +6,48 @@ module alu(data_operandA, data_operandB, ctrl_ALUopcode, ctrl_shiftamt, data_res
     output [31:0] data_result;
     output isNotEqual, isLessThan, overflow;
 
-    wire [31:0] addRes, andRes, orRes, sllRes, sraRes, subRes;
-    wire doSub;
+
     wire [31:0] inputB;
-    //addition/subtraction result
-    //cla_full_adder(x, y, c_in, p, g, s);
-    //use cin to add on 1 if subtraction
-    
-    //adder cla_full_adder(data_operandA, data_operandB, doSu4b, p, g, addResult);
-    cla_full_adder aluAdder(data_operandA, inputB, ctrl_ALUopcode[0], addRes);
+    wire [31:0] data_operandB_inverted;
 
-    //subtraction result
-    //invert input b
-    //module mux_2(out, select, in0, in1);
-    wire [31:0] inverted_B;
-    bit_inverter aluInv(data_operandB, inverted_B);
+    bit_inverter not_b(data_operandB, data_operandB_inverted);
+    assign inputB = ctrl_ALUopcode[0] ? data_operandB_inverted : data_operandB;
 
+ 
 
-    mux_2 chooseSubt(inputB, ctrl_ALUopcode[0], data_operandB, inverted_B);
+    wire [31:0] addOut;
+    cla_full_adder add(data_operandA, inputB, ctrl_ALUopcode[0], addOut);
 
-    //and result
-    bitwise_and aluAnd(data_operandA, data_operandB, andRes);
+    wire [31:0] right_shifted_value, left_shifted_value;
+    right_barrel_shifter right_shifter(data_operandA, ctrl_shiftamt, right_shifted_value);
+    left_barrel_shifter left_shifter(data_operandA, ctrl_shiftamt, left_shifted_value);
 
+    wire [31:0] andRes;
+    wire [31:0] orRes;
 
-    //or result
-    bitwise_or aluOR(data_operandA, data_operandB, orRes);
-
-    //sll result
-    //module left_barrel_shifter (data, amt, out);
-    left_barrel_shifter aluLeft(data_operandA,ctrl_shiftamt,sllRes);
-
-    //sra result
-    right_barrel_shifter aluRight(data_operandA,ctrl_shiftamt,sraRes);
-
-    // use 8 bit mux to select output based on opcode
-    //mux_8(in0,in1,in2,in3,in4,in5,in6,in7, out, select);
-    mux_8 resultSelection(addRes, addRes, andRes, orRes, sllRes, sraRes, 32'b0, 32'b0, data_result, ctrl_ALUopcode[2:0]);
-
-    // positive overflow
-    wire positive_ovf;
-    //Both inputs are positive and final sum bit is 1
-    and posOvf(positive_ovf, data_operandA[31] ? 0:1, data_operandB[31] ? 0:1, addRes[31]);
-    wire negative_overflow;
-    and negOvf(negative_overflow, data_operandA[31], data_operandB[31], addRes[31] ? 0 : 1);
+    bitwise_and ander (data_operandA, data_operandB, andRes);
+    bitwise_or orrer (data_operandA, data_operandB, orRes);
 
 
-    or ovfTot(overflow, positive_ovf, negative_overflow);
+    mux_8 alu_mux(addOut, addOut, andRes, orRes, left_shifted_value, right_shifted_value, 32'b0, 32'b0, data_result, ctrl_ALUopcode[2:0]);
 
-    //Not Equal
-    or isNeq(isNotEqual, addRes[0], addRes[1], addRes[2], addRes[3], addRes[4], addRes[5], addRes[6], addRes[7], addRes[8], addRes[9], addRes[10], addRes[11], addRes[12], addRes[13], addRes[14], addRes[15], addRes[16], addRes[17], addRes[18], addRes[19], addRes[20], addRes[21], addRes[22], addRes[23], addRes[24], addRes[25], addRes[26], addRes[27], addRes[28], addRes[29], addRes[30], addRes[31]);
+    wire not_msb_A, not_msb_B, not_msb_addOut;
+    not complement_msb_A(not_msb_A, data_operandA[31]);
+    not complement_msb_B(not_msb_B, inputB[31]);
+    not complement_msb_addOut(not_msb_addOut, addOut[31]);
 
-    // is less than
-    // check if MSB of sum is a 1 (sum is negative) AND no pos overflow
-    // or if MSB of sum is 0 (sum is positive) AND neg overflow occurred (special case)
-    wire normal_check_less_than, special_check_less_than;
-    and check_normal_less_than(normal_check_less_than, addRes[31], positive_ovf ? 0 : 1);
-    and check_special_less_than(special_check_less_than, addRes[31] ? 0 : 1, negative_overflow);
-    or check_less_than(isLessThan, normal_check_less_than, special_check_less_than);
+    wire overflow_pos, overflow_neg;
+    and check_overflow_neg(overflow_neg, data_operandA[31], inputB[31], not_msb_addOut);
+    and check_pos_overfow(overflow_pos, not_msb_A, not_msb_B, addOut[31]);
+    or check_overflow(overflow, overflow_pos, overflow_neg);
+
+    wire check_less_than_standard, check_less_than_special;
+    and check_special_less_than(check_less_than_special, addOut[31] ? 0 : 1, overflow_neg);
+    and check_normal_less_than(check_less_than_standard, addOut[31], overflow_pos ? 0 : 1);
+    or check_less_than(isLessThan, check_less_than_standard, check_less_than_special);
+
+
+    or check_not_equal(isNotEqual, addOut[0], addOut[1], addOut[2], addOut[3], addOut[4], addOut[5], addOut[6], addOut[7], addOut[8], addOut[9], addOut[10], 
+        addOut[11], addOut[12], addOut[13], addOut[14], addOut[15], addOut[16], addOut[17], addOut[18], addOut[19], addOut[20], addOut[21], addOut[22], addOut[23],
+        addOut[24], addOut[25], addOut[26], addOut[27], addOut[28], addOut[29], addOut[30], addOut[31]);
 endmodule
