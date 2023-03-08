@@ -1,5 +1,5 @@
 $date
-	Wed Mar  8 15:34:02 2023
+	Wed Mar  8 15:37:19 2023
 $end
 $version
 	Icarus Verilog
@@ -45,9 +45,9 @@ $var wire 1 ? not_msb_addOut $end
 $var wire 1 " overflow $end
 $var wire 1 @ overflow_neg $end
 $var wire 1 A overflow_pos $end
-$var wire 32 B right_shifted_value [31:0] $end
+$var wire 32 B rsaRes [31:0] $end
 $var wire 32 C orRes [31:0] $end
-$var wire 32 D left_shifted_value [31:0] $end
+$var wire 32 D llsRes [31:0] $end
 $var wire 32 E inputB [31:0] $end
 $var wire 32 F data_result [31:0] $end
 $var wire 32 G data_operandB_inverted [31:0] $end

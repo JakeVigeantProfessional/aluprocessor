@@ -18,9 +18,9 @@ module alu(data_operandA, data_operandB, ctrl_ALUopcode, ctrl_shiftamt, data_res
     wire [31:0] addOut;
     cla_full_adder add(data_operandA, inputB, ctrl_ALUopcode[0], addOut);
 
-    wire [31:0] right_shifted_value, left_shifted_value;
-    right_barrel_shifter right_shifter(data_operandA, ctrl_shiftamt, right_shifted_value);
-    left_barrel_shifter left_shifter(data_operandA, ctrl_shiftamt, left_shifted_value);
+    wire [31:0] rsaRes, llsRes;
+    right_barrel_shifter right_shifter(data_operandA, ctrl_shiftamt, rsaRes);
+    left_barrel_shifter left_shifter(data_operandA, ctrl_shiftamt, llsRes);
 
     wire [31:0] andRes;
     wire [31:0] orRes;
@@ -29,7 +29,7 @@ module alu(data_operandA, data_operandB, ctrl_ALUopcode, ctrl_shiftamt, data_res
     bitwise_or orrer (data_operandA, data_operandB, orRes);
 
 
-    mux_8 alu_mux(addOut, addOut, andRes, orRes, left_shifted_value, right_shifted_value, 32'b0, 32'b0, data_result, ctrl_ALUopcode[2:0]);
+    mux_8 alu_mux(addOut, addOut, andRes, orRes, llsRes, rsaRes, 32'b0, 32'b0, data_result, ctrl_ALUopcode[2:0]);
 
     wire not_msb_A, not_msb_B, not_msb_addOut;
     not complement_msb_A(not_msb_A, data_operandA[31]);
